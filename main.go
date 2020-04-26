@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"regexp"
 	"strconv"
@@ -16,6 +17,7 @@ type Reference struct {
 	Pages   string // to include the dash and possible alphabetical pages
 	Volume  string // for the same as above although less likely
 	Year    string
+	Tags    []string
 }
 
 func ReplaceSubex(re *regexp.Regexp, s string, n int) string {
@@ -48,8 +50,11 @@ func ReadBib(bibname string) (refs []Reference) {
 	pages := regexp.MustCompile(`Pages={(.*)},`)
 	// TODO specifically here requires brace on end
 	year := regexp.MustCompile(`Year=(.*)}`)
+	tags := regexp.MustCompile(`TAGS: (.*)`)
+	tagspace := regexp.MustCompile(` `)
 
 	for _, line := range lines {
+		noTags := true
 		switch {
 		case reftype.MatchString(line):
 			refs = append(refs, *new(Reference))
@@ -69,7 +74,34 @@ func ReadBib(bibname string) (refs []Reference) {
 			refs[nref].Volume = ReplaceSubex(volume, line, 1)
 		case year.MatchString(line):
 			refs[nref].Year = ReplaceSubex(year, line, 1)
+		case tags.MatchString(line):
+			refs[nref].Tags = SplitAndTrim(ReplaceSubex(tags, line, 1), tagspace)
+			noTags = false
+		}
+		if noTags {
+			refs[nref].Tags = []string{""}
 		}
 	}
 	return
+}
+
+func MakeBib(refs []Reference) (lines []string) {
+	for _, ref := range refs {
+		// TODO try for := range reflect.Fields, not sure if it will keep order
+		lines = append(lines, fmt.Sprintf("@%s{%s,", ref.Type, ref.Key),
+			fmt.Sprintf("Author={%s},", strings.Join(ref.Authors, " and ")),
+			fmt.Sprintf("Title={%s},", ref.Title),
+			fmt.Sprintf("Journal={%s},", ref.Journal),
+			fmt.Sprintf("Volume=%s,", ref.Volume),
+			fmt.Sprintf("Pages={%s},", ref.Pages),
+			fmt.Sprintf("Year=%s}", ref.Year),
+			fmt.Sprintf("TAGS: %s", strings.Join(ref.Tags, " ")),
+			"")
+	}
+	return
+}
+
+func WriteBib(refs []Reference, filename string) {
+	lines := strings.Join(MakeBib(refs), "\n")
+	ioutil.WriteFile(filename, []byte(lines), 0755)
 }
