@@ -8,18 +8,6 @@ import (
 	"strings"
 )
 
-type Reference struct {
-	Type    string // @article, book, etc
-	Key     string // MP2, Fortenberry07
-	Authors []string
-	Title   string
-	Journal string
-	Pages   string // to include the dash and possible alphabetical pages
-	Volume  string // for the same as above although less likely
-	Year    string
-	Tags    []string
-}
-
 func ReplaceSubex(re *regexp.Regexp, s string, n int) string {
 	// return the nth subexpression re of s
 	return strings.TrimSpace(string(re.ReplaceAllString(s, "$"+strconv.Itoa(n))))
@@ -87,7 +75,6 @@ func ReadBib(bibname string) (refs []Reference) {
 
 func MakeBib(refs []Reference) (lines []string) {
 	for _, ref := range refs {
-		// TODO try for := range reflect.Fields, not sure if it will keep order
 		lines = append(lines, fmt.Sprintf("@%s{%s,", ref.Type, ref.Key),
 			fmt.Sprintf("Author={%s},", strings.Join(ref.Authors, " and ")),
 			fmt.Sprintf("Title={%s},", ref.Title),

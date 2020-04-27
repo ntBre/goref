@@ -1,14 +1,19 @@
 * Goal Features
-  - TUI for adding, editing references
+  - TUI for adding, editing references, probably either
+    - https://github.com/marcusolsson/tui-go
+    - https://github.com/rivo/tview <- prob this one
   - Tagging system, cite by tag
     - ex) tag LYP86, LYP88, and B3 with :b3lyp: tag, :cite b3lyp -> \cite{LYP86, LYP88, B3}
   - Fuzzy find on all fields
     - ex) /for11dipole matches Fortenberry11dbs
 
 * Ideas/notes
+  - check for duplicate keys, everything else is probably okay not unique
   - might want to join the whole reference on one line to avoid line break stuff
     - should also help with fuzzy finding if I already have this mechanism
-  - need to make curly braces optional in reading 
+  - need to make curly braces optional in reading
+    - separate read initial and normal read since after init they should be written by me?
     - take into account other possible delimiters like quotes
     - could just be opinionated about how the initial refs should be laid out
+  - Add/edit methods for all fields of ref - not sure I need remove
 
