@@ -37,6 +37,13 @@ func (r Reference) String() string {
 		r.Pages, r.Year, strings.Join(r.Tags, ", "))
 }
 
+func (r Reference) SearchString() string {
+	return fmt.Sprintf("%s: %s, %s, %s %s, %s, %s; %s\n",
+		r.Key, strings.Join(r.Authors, " and "),
+		r.Title, r.Journal, r.Volume,
+		r.Pages, r.Year, strings.Join(r.Tags, ", "))
+}
+
 func NewReference(rtype, rkey string, rauth []string, rtitle,
 	rjour, rvol, rpages, ryear string) Reference {
 	return Reference{Type: rtype, Key: rkey, Authors: rauth,

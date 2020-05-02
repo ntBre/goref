@@ -82,3 +82,13 @@ func TestString(t *testing.T) {
 		t.Errorf("\ngot %q\nwad %q", got, want)
 	}
 }	
+
+func TestSearchString(t *testing.T) {
+	want := "MP2: C. M{\\o}ller and M. S. Plesset, "+
+		"Note on an Approximation Treatment for Many-Electron Systems, "+
+		"Phys. Rev. 46, 618-622, 1934; test, tag, now\n"
+	got := ref.SearchString()
+	if got != want {
+		t.Errorf("\ngot %q\nwad %q", got, want)
+	}
+}	

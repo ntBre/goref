@@ -81,6 +81,7 @@ func ReadBib(bibname string) (refs []Reference) {
 }
 
 func MakeBib(refs []Reference) (lines []string) {
+	// TODO can probably refactor this with reference.String()
 	for _, ref := range refs {
 		lines = append(lines, fmt.Sprintf("@%s{%s,", ref.Type, ref.Key),
 			fmt.Sprintf("Author={%s},", strings.Join(ref.Authors, " and ")),
