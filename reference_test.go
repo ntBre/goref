@@ -72,3 +72,13 @@ func TestEditType(t *testing.T) {
 		t.Errorf("got %s, wanted %s", start.Type, goaltype)
 	}
 }
+
+func TestString(t *testing.T) {
+	want := "Type: article\nKey: MP2\nAuthors: C. M{\\o}ller and M. S. Plesset\n"+
+		"Title: Note on an Approximation Treatment for Many-Electron Systems\n"+
+		"Journal: Phys. Rev.\nVolume: 46\nPages: 618-622\nYear: 1934\nTags: test, tag, now\n"
+	got := ref.String()
+	if got != want {
+		t.Errorf("\ngot %q\nwad %q", got, want)
+	}
+}	

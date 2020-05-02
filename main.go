@@ -19,33 +19,40 @@ func SplitAndTrim(s string, re *regexp.Regexp) []string {
 
 func ReadBib(bibname string) (refs []Reference) {
 
-	// TODO handle file with fields over multiple lines
+	var noTags bool
 	file, err := ioutil.ReadFile(bibname)
 	if err != nil {
 		panic(err)
 	}
 	lines := strings.Split(string(file), "\n")
 
-	nref := 0
+	nref := -1
 	reftype := regexp.MustCompile(`@(article|book){.*`)
-	key := regexp.MustCompile(`@.*{(MP2),`)
-	// TODO make this more general, reliant on case now
-	author := regexp.MustCompile(`Author={(.*)},`)
+	key := regexp.MustCompile(`@.*{(.*),`)
+	author := regexp.MustCompile(`(?i)Author\s*=\s*{(.*)},`)
 	and := regexp.MustCompile(`\s+and\s+`)
-	title := regexp.MustCompile(`Title={(.*)},`)
-	journal := regexp.MustCompile(`Journal={(.*)},`)
-	volume := regexp.MustCompile(`Volume=(.*),`)
-	pages := regexp.MustCompile(`Pages={(.*)},`)
-	// TODO specifically here requires brace on end
-	year := regexp.MustCompile(`Year=(.*)}`)
-	tags := regexp.MustCompile(`TAGS: (.*)`)
+	title := regexp.MustCompile(`(?i)Title\s*=\s*{(.*)},`)
+	journal := regexp.MustCompile(`(?i)Journal\s*=\s*{(.*)},`)
+	volume := regexp.MustCompile(`(?i)Volume\s*=\s*\{?([a-z0-9]*)\}?,`)
+	pages := regexp.MustCompile(`(?i)Pages\s*=\s*{?([a-z-0-9]*)}?,`)
+	year := regexp.MustCompile(`(?i)Year\s*=\s*\{?([a-z0-9]*)}?}`)
+	tags := regexp.MustCompile(`(?i)TAGS: (.*)`)
 	tagspace := regexp.MustCompile(` `)
+	eqBracket := regexp.MustCompile(`\s*=\s*{\s*`)
 
-	for _, line := range lines {
-		noTags := true
+	for i := 0; i < len(lines); i++ {
+		line := strings.TrimSpace(lines[i])
+		if eqBracket.MatchString(line) && !strings.Contains(line, "},") {
+			for !strings.Contains(line, "},") {
+				line += " " + strings.TrimSpace(lines[i+1])
+				i++
+			}
+		}
 		switch {
 		case reftype.MatchString(line):
 			refs = append(refs, *new(Reference))
+			nref++
+			noTags = true
 			refs[nref].Type = ReplaceSubex(reftype, line, 1)
 			fallthrough
 		case key.MatchString(line):

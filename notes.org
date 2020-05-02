@@ -1,3 +1,11 @@
+* TODOS
+** DONE relax input reading constraints -> adjust regex, \s* for newlines, just look for end brace
+   - case insensitive
+** TODO handle resources like books, incollection, etc
+** TODO continue adding test cases from problems in whole refs.bib
+** TODO testing of add/edit methods
+   - maybe the interface will handle the interesting parts
+
 * Goal Features
   - TUI for adding, editing references, probably either
     - https://github.com/marcusolsson/tui-go
