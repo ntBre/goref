@@ -2,20 +2,11 @@ package main
 
 import (
 	"fmt"
+	"github.com/rivo/tview"
 	"io/ioutil"
 	"regexp"
-	"strconv"
 	"strings"
 )
-
-func ReplaceSubex(re *regexp.Regexp, s string, n int) string {
-	// return the nth subexpression re of s
-	return strings.TrimSpace(string(re.ReplaceAllString(s, "$"+strconv.Itoa(n))))
-}
-
-func SplitAndTrim(s string, re *regexp.Regexp) []string {
-	return re.Split(strings.TrimSpace(s), -1)
-}
 
 func ReadBib(bibname string) (refs []Reference) {
 
@@ -28,49 +19,64 @@ func ReadBib(bibname string) (refs []Reference) {
 
 	nref := -1
 	reftype := regexp.MustCompile(`@(article|book){.*`)
-	key := regexp.MustCompile(`@.*{(.*),`)
-	author := regexp.MustCompile(`(?i)Author\s*=\s*{(.*)},`)
+	key := regexp.MustCompile(`(?U)@.*\{(.*),`)
+	author := regexp.MustCompile(`(?iU)Author\s*=\s*{(.*)},`)
 	and := regexp.MustCompile(`\s+and\s+`)
-	title := regexp.MustCompile(`(?i)Title\s*=\s*{(.*)},`)
-	journal := regexp.MustCompile(`(?i)Journal\s*=\s*{(.*)},`)
+	title := regexp.MustCompile(`(?iU)Title\s*=\s*{(.*)},`)
+	journal := regexp.MustCompile(`(?iU)Journal\s*=\s*{(.*)},`)
 	volume := regexp.MustCompile(`(?i)Volume\s*=\s*\{?([a-z0-9]*)\}?,`)
 	pages := regexp.MustCompile(`(?i)Pages\s*=\s*{?([a-z-0-9]*)}?,`)
 	year := regexp.MustCompile(`(?i)Year\s*=\s*\{?([a-z0-9]*)}?}`)
-	tags := regexp.MustCompile(`(?i)TAGS: (.*)`)
+	// end with nonspace
+	tags := regexp.MustCompile(`(?i)TAGS: (.*\S)`)
 	tagspace := regexp.MustCompile(` `)
-	eqBracket := regexp.MustCompile(`\s*=\s*{\s*`)
-
-	for i := 0; i < len(lines); i++ {
-		line := strings.TrimSpace(lines[i])
-		if eqBracket.MatchString(line) && !strings.Contains(line, "},") {
-			for !strings.Contains(line, "},") {
-				line += " " + strings.TrimSpace(lines[i+1])
-				i++
-			}
+	// eqBracket := regexp.MustCompile(`\s*=\s*{\s*`)
+	indices := make([]int, 0)
+	for i, line := range lines {
+		lines[i] = strings.TrimSpace(line)
+		if strings.Contains(line, "@") {
+			indices = append(indices, i)
 		}
-		switch {
-		case reftype.MatchString(line):
+	}
+	refstrings := make([]string, 0)
+	for i, _ := range indices {
+		if i < len(indices)-1 {
+			refstrings = append(refstrings, strings.Join(lines[indices[i]:indices[i+1]], " "))
+		} else {
+			refstrings = append(refstrings, strings.Join(lines[indices[i]:], " "))
+		}
+	}
+
+	for _, ref := range refstrings {
+		if reftype.MatchString(ref){
 			refs = append(refs, *new(Reference))
 			nref++
 			noTags = true
-			refs[nref].Type = ReplaceSubex(reftype, line, 1)
-			fallthrough
-		case key.MatchString(line):
-			refs[nref].Key = ReplaceSubex(key, line, 1)
-		case author.MatchString(line):
-			refs[nref].Authors = SplitAndTrim(ReplaceSubex(author, line, 1), and)
-		case title.MatchString(line):
-			refs[nref].Title = ReplaceSubex(title, line, 1)
-		case journal.MatchString(line):
-			refs[nref].Journal = ReplaceSubex(journal, line, 1)
-		case pages.MatchString(line):
-			refs[nref].Pages = ReplaceSubex(pages, line, 1)
-		case volume.MatchString(line):
-			refs[nref].Volume = ReplaceSubex(volume, line, 1)
-		case year.MatchString(line):
-			refs[nref].Year = ReplaceSubex(year, line, 1)
-		case tags.MatchString(line):
-			refs[nref].Tags = SplitAndTrim(ReplaceSubex(tags, line, 1), tagspace)
+			refs[nref].Type = reftype.FindStringSubmatch(ref)[1]
+		}
+		if key.MatchString(ref){
+			refs[nref].Key = key.FindStringSubmatch(ref)[1]
+		}
+		if author.MatchString(ref) {
+			refs[nref].Authors = and.Split(author.FindStringSubmatch(ref)[1], -1)
+		}
+		if title.MatchString(ref) {
+			refs[nref].Title = title.FindStringSubmatch(ref)[1]
+		}
+		if journal.MatchString(ref){
+			refs[nref].Journal = journal.FindStringSubmatch(ref)[1]
+		}
+		if pages.MatchString(ref){
+			refs[nref].Pages = pages.FindStringSubmatch(ref)[1]
+		}
+		if volume.MatchString(ref){
+			refs[nref].Volume = volume.FindStringSubmatch(ref)[1]
+		}
+		if year.MatchString(ref){
+			refs[nref].Year = year.FindStringSubmatch(ref)[1]
+		}
+		if tags.MatchString(ref){
+			refs[nref].Tags = tagspace.Split(tags.FindStringSubmatch(ref)[1], -1)
 			noTags = false
 		}
 		if noTags {
@@ -82,6 +88,7 @@ func ReadBib(bibname string) (refs []Reference) {
 
 func MakeBib(refs []Reference) (lines []string) {
 	// TODO can probably refactor this with reference.String()
+	// well something similar
 	for _, ref := range refs {
 		lines = append(lines, fmt.Sprintf("@%s{%s,", ref.Type, ref.Key),
 			fmt.Sprintf("Author={%s},", strings.Join(ref.Authors, " and ")),
@@ -99,4 +106,19 @@ func MakeBib(refs []Reference) (lines []string) {
 func WriteBib(refs []Reference, filename string) {
 	lines := strings.Join(MakeBib(refs), "\n")
 	ioutil.WriteFile(filename, []byte(lines), 0755)
+}
+
+func WriteFZFList(refs []Reference, filename string) {
+	lines := ""
+	for _, ref := range refs {
+		lines += ref.SearchString()
+	}
+	ioutil.WriteFile(filename, []byte(lines), 0755)
+}
+
+func main() {
+	box := tview.NewBox().SetBorder(true).SetTitle("[blue::l]Hello world!!")
+	if err := tview.NewApplication().SetRoot(box, true).Run(); err != nil {
+		panic(err)
+	}
 }

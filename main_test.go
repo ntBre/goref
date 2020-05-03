@@ -45,14 +45,31 @@ var (
 			Type:    "article",
 			Key:     "Huang08",
 			Authors: []string{"X. Huang", "T. J. Lee"},
-			Title:   "A Procedure for Computing Accurate $Ab\\ Initio$ "+
+			Title: "A Procedure for Computing Accurate $Ab\\ Initio$ " +
 				"Quartic Force Fields: Application to {HO$_2$$^+$ and H$_2$O}",
 			Journal: "J. Chem. Phys.",
 			Volume:  "129",
 			Pages:   "044312",
 			Year:    "2008",
 			Tags:    []string{""},
-			
+		},
+	}
+	book = []Reference{
+		Reference{
+			Type:    "book",
+			Key:     "Cook",
+			Authors: []string{"D. B. Cook"},
+			Title:   "Handbook of Computational Quantum Chemistry",
+			Year:    "2005",
+			Tags:    []string{""},
+		},
+		Reference{
+			Type:    "book",
+			Key:     "Cramer",
+			Authors: []string{"C. J. Cramer"},
+			Title:   "Essentials of Computational Chemistry: Theories and Models",
+			Year:    "2004",
+			Tags:    []string{""},
 		},
 	}
 )
@@ -74,6 +91,13 @@ func TestReadBib(t *testing.T) {
 		got := ReadBib("tex/onepg.bib")
 		if !reflect.DeepEqual(got, refpg) {
 			t.Errorf("\ngot %q\nwad %q\n", got, refpg)
+		}
+	})
+	// remember to make tags empty string, different from nil
+	t.Run("two books", func(t *testing.T) {
+		got := ReadBib("tex/book.bib")
+		if !reflect.DeepEqual(got, book) {
+			t.Errorf("\ngot %q\nwad %q\n", got, book)
 		}
 	})
 	// TODO continue looking for problems with this
@@ -98,4 +122,9 @@ func TestMakeBib(t *testing.T) {
 
 func TestWriteBib(t *testing.T) {
 	WriteBib(refs, "tex/testbib.out")
+}
+
+func TestWriteFZFList(t *testing.T) {
+	refs := ReadBib("tex/refs.bib")
+	WriteFZFList(refs, "tex/test.fzf")
 }

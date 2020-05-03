@@ -1,10 +1,16 @@
 * TODOS
-** DONE relax input reading constraints -> adjust regex, \s* for newlines, just look for end brace
-   - case insensitive
+** TODO Work on WriteFZFList
+   - this will be useful even while nothing else works
+   - just pipe this file into fzf and have most of the functionality I want
+** TODO fzf integration
+   - have SearchString so just need to pipe them in
 ** TODO handle resources like books, incollection, etc
 ** TODO continue adding test cases from problems in whole refs.bib
 ** TODO testing of add/edit methods
    - maybe the interface will handle the interesting parts
+** TODO work on TUI
+   - go build . && st -e ./goref
+     - seems like a good way to test
 
 * Goal Features
   - TUI for adding, editing references, probably either
@@ -25,3 +31,6 @@
     - could just be opinionated about how the initial refs should be laid out
   - Add/edit methods for all fields of ref - not sure I need remove
 
+* Done
+** DONE relax input reading constraints -> adjust regex, \s* for newlines, just look for end brace
+   - case insensitive
