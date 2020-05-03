@@ -1,9 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
-	"github.com/rivo/tview"
+	"io"
 	"io/ioutil"
+	"os"
+	"os/exec"
 	"regexp"
 	"strings"
 )
@@ -18,7 +21,7 @@ func ReadBib(bibname string) (refs []Reference) {
 	lines := strings.Split(string(file), "\n")
 
 	nref := -1
-	reftype := regexp.MustCompile(`@(article|book){.*`)
+	reftype := regexp.MustCompile(`@(article|book|incollection|misc|string){.*`)
 	key := regexp.MustCompile(`(?U)@.*\{(.*),`)
 	author := regexp.MustCompile(`(?iU)Author\s*=\s*{(.*)},`)
 	and := regexp.MustCompile(`\s+and\s+`)
@@ -48,13 +51,13 @@ func ReadBib(bibname string) (refs []Reference) {
 	}
 
 	for _, ref := range refstrings {
-		if reftype.MatchString(ref){
+		if reftype.MatchString(ref) {
 			refs = append(refs, *new(Reference))
 			nref++
 			noTags = true
 			refs[nref].Type = reftype.FindStringSubmatch(ref)[1]
 		}
-		if key.MatchString(ref){
+		if key.MatchString(ref) {
 			refs[nref].Key = key.FindStringSubmatch(ref)[1]
 		}
 		if author.MatchString(ref) {
@@ -63,19 +66,19 @@ func ReadBib(bibname string) (refs []Reference) {
 		if title.MatchString(ref) {
 			refs[nref].Title = title.FindStringSubmatch(ref)[1]
 		}
-		if journal.MatchString(ref){
+		if journal.MatchString(ref) {
 			refs[nref].Journal = journal.FindStringSubmatch(ref)[1]
 		}
-		if pages.MatchString(ref){
+		if pages.MatchString(ref) {
 			refs[nref].Pages = pages.FindStringSubmatch(ref)[1]
 		}
-		if volume.MatchString(ref){
+		if volume.MatchString(ref) {
 			refs[nref].Volume = volume.FindStringSubmatch(ref)[1]
 		}
-		if year.MatchString(ref){
+		if year.MatchString(ref) {
 			refs[nref].Year = year.FindStringSubmatch(ref)[1]
 		}
-		if tags.MatchString(ref){
+		if tags.MatchString(ref) {
 			refs[nref].Tags = tagspace.Split(tags.FindStringSubmatch(ref)[1], -1)
 			noTags = false
 		}
@@ -108,17 +111,44 @@ func WriteBib(refs []Reference, filename string) {
 	ioutil.WriteFile(filename, []byte(lines), 0755)
 }
 
-func WriteFZFList(refs []Reference, filename string) {
+func WriteFZFList(refs []Reference, w io.Writer) {
 	lines := ""
 	for _, ref := range refs {
 		lines += ref.SearchString()
 	}
-	ioutil.WriteFile(filename, []byte(lines), 0755)
+	w.Write([]byte(lines))
+}
+
+func FuzzyFind(refs []Reference) string {
+	// fuzzy find in refs and return the found string
+	buf := new(bytes.Buffer)
+	WriteFZFList(refs, buf)
+	command := "fzf -m"
+	shell := os.Getenv("SHELL")
+	if len(shell) == 0 {
+		shell = "sh"
+	}
+	cmd := exec.Command(shell, "-c", command)
+	cmd.Stderr = os.Stderr
+	in, _ := cmd.StdinPipe()
+	// unclear to me why go routine necessary but it seems to be
+	go func() {
+		fmt.Fprintln(in, buf.String())
+		in.Close()
+	}()
+	result, _ := cmd.Output()
+	return strings.TrimSpace(string(result))
+	
 }
 
 func main() {
-	box := tview.NewBox().SetBorder(true).SetTitle("[blue::l]Hello world!!")
-	if err := tview.NewApplication().SetRoot(box, true).Run(); err != nil {
-		panic(err)
-	}
+	refs := ReadBib("/home/brent/School/Research/Pubs/refs.bib")
+	fmt.Println(FuzzyFind(refs))
 }
+
+// func main() {
+// 	box := tview.NewBox().SetBorder(true).SetTitle("[blue::l]Hello world!!")
+// 	if err := tview.NewApplication().SetRoot(box, true).Run(); err != nil {
+// 		panic(err)
+// 	}
+// }

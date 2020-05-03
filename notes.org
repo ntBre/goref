@@ -1,10 +1,10 @@
 * TODOS
-** TODO Work on WriteFZFList
-   - this will be useful even while nothing else works
-   - just pipe this file into fzf and have most of the functionality I want
-** TODO fzf integration
-   - have SearchString so just need to pipe them in
+** TODO let SearchString take list of fields to show
 ** TODO handle resources like books, incollection, etc
+*** TODO only print the fields that exist/are relevant
+   - reading in works for the article fields
+   - need to add their respective fields
+   - also string type doesn't really work right now
 ** TODO continue adding test cases from problems in whole refs.bib
 ** TODO testing of add/edit methods
    - maybe the interface will handle the interesting parts
@@ -34,3 +34,10 @@
 * Done
 ** DONE relax input reading constraints -> adjust regex, \s* for newlines, just look for end brace
    - case insensitive
+** DONE fzf integration
+   - have SearchString so just need to pipe them in
+** DONE Work on WriteFZFList
+   - works with full reference, but probably want to search by particular fields
+   - checkboxes in interface to select fields
+   - this will be useful even while nothing else works
+   - just pipe this file into fzf and have most of the functionality I want

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bufio"
+	"os"
 	"reflect"
 	"testing"
 )
@@ -126,5 +128,6 @@ func TestWriteBib(t *testing.T) {
 
 func TestWriteFZFList(t *testing.T) {
 	refs := ReadBib("tex/refs.bib")
-	WriteFZFList(refs, "tex/test.fzf")
+	f, _ := os.Create("tex/test.fzf")
+	WriteFZFList(refs, bufio.NewWriter(f))
 }
