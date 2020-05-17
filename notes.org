@@ -1,4 +1,20 @@
 * TODOS
+** TODO add readme
+** TODO start documentation
+** TODO command line args  
+    - h : help ; flags.PrintDefaults? only prints the flag info
+    - s : search or q : query
+    - c : alternate config file
+** TODO Config file
+*** TODO parser for this - minimal
+    - path to library
+    - path to refs.bib
+    - pdf viewer
+** TODO open match in pdf
+   - search library path for matching name and open
+** TODO work on TUI
+   - go build . && st -e ./goref
+     - seems like a good way to test
 ** TODO let SearchString take list of fields to show
 ** TODO handle resources like books, incollection, etc
 *** TODO only print the fields that exist/are relevant
@@ -8,9 +24,6 @@
 ** TODO continue adding test cases from problems in whole refs.bib
 ** TODO testing of add/edit methods
    - maybe the interface will handle the interesting parts
-** TODO work on TUI
-   - go build . && st -e ./goref
-     - seems like a good way to test
 
 * Goal Features
   - TUI for adding, editing references, probably either
@@ -30,6 +43,18 @@
     - take into account other possible delimiters like quotes
     - could just be opinionated about how the initial refs should be laid out
   - Add/edit methods for all fields of ref - not sure I need remove
+  - maybe make regexes a loop too, hopefully
+    - let the fields of references be keys with regex and a value
+    - alternatively, let Value be a function that returns the right type or something
+      #+BEGIN_SRC go
+	type Key struct {
+		Expr *regexp.Regexp
+		Value interface{}
+	}
+	regexes := []*regexp.Regexp{...}
+	for _, regex := range regexes {
+      #+END_SRC
+
 
 * Done
 ** DONE relax input reading constraints -> adjust regex, \s* for newlines, just look for end brace

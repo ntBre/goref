@@ -11,6 +11,47 @@ import (
 	"strings"
 )
 
+// Read these from config file
+var (
+	Config [noptions]string
+)
+
+/*
+Reference could be an array instead of a struct
+type Field int
+const (
+Type Field = iota
+Key
+Author
+...
+Tags
+NumFields // nice way to get the number of fields, just leave at end
+)
+func (f Field) String() string {} // for printing 
+This would require all of the fields to be stored as strings
+which is fine, just split Authors on ` and ` if needed and Tags on space
+Reference[Type] = Field
+type Field struct {
+    *regexp.Regexp
+    Value
+}
+but then how to associate the regular expressions with the right positions?
+just have to maintain an array of them
+parallel arrays of Reference and regexes and loop through regexes, use same
+index in the Reference array
+    - negates need for this Field struct
+at every refstring, loop through regexes and Reference[i] = regex[i].FindMatch
+refs is still []Reference, so append at end
+Field alias above makes this not work for integer i without a cast, so maybe no alias
+go back to custom Regex type like in go-cart infile reading
+Regex and Field value, then the array of regexes doesnt have to be ordered either
+
+The way I've done it already makes the most sense to me intuitively, but I dislike
+the huge tree of ifs when theyre all doing the same thing
+Similarly the list of named regular expressions; seems clear that there should
+be some way to pair the regexes and the Reference fields
+*/
+
 func ReadBib(bibname string) (refs []Reference) {
 
 	var noTags bool
@@ -35,12 +76,14 @@ func ReadBib(bibname string) (refs []Reference) {
 	tagspace := regexp.MustCompile(` `)
 	// eqBracket := regexp.MustCompile(`\s*=\s*{\s*`)
 	indices := make([]int, 0)
+	// find where references start
 	for i, line := range lines {
 		lines[i] = strings.TrimSpace(line)
 		if strings.Contains(line, "@") {
 			indices = append(indices, i)
 		}
 	}
+	// put references on single lines
 	refstrings := make([]string, 0)
 	for i, _ := range indices {
 		if i < len(indices)-1 {
@@ -58,6 +101,8 @@ func ReadBib(bibname string) (refs []Reference) {
 			refs[nref].Type = reftype.FindStringSubmatch(ref)[1]
 		}
 		if key.MatchString(ref) {
+			// TODO farm this to helper with error handling
+			// grabbing first match of substring
 			refs[nref].Key = key.FindStringSubmatch(ref)[1]
 		}
 		if author.MatchString(ref) {
@@ -100,8 +145,7 @@ func MakeBib(refs []Reference) (lines []string) {
 			fmt.Sprintf("Volume=%s,", ref.Volume),
 			fmt.Sprintf("Pages={%s},", ref.Pages),
 			fmt.Sprintf("Year=%s}", ref.Year),
-			fmt.Sprintf("TAGS: %s", strings.Join(ref.Tags, " ")),
-			"")
+			fmt.Sprintf("TAGS: %s", strings.Join(ref.Tags, " ")), "")
 	}
 	return
 }
@@ -142,7 +186,10 @@ func FuzzyFind(refs []Reference) string {
 }
 
 func main() {
-	refs := ReadBib("/home/brent/School/Research/Pubs/refs.bib")
+	// for building executable to use now
+	// ouch, going to have to handle different systems' directory structures
+	ParseConfig("/home/brent/.config/goref/config")
+	refs := ReadBib(Config[bibfile])
 	fmt.Println(FuzzyFind(refs))
 }
 
