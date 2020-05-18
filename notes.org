@@ -1,29 +1,36 @@
 * TODOS
-** TODO add readme
-** TODO start documentation
-** TODO command line args  
-    - h : help ; flags.PrintDefaults? only prints the flag info
-    - s : search or q : query
-    - c : alternate config file
-** TODO Config file
-*** TODO parser for this - minimal
-    - path to library
-    - path to refs.bib
-    - pdf viewer
-** TODO open match in pdf
+** DONE open match in pdf
    - search library path for matching name and open
+** WAIT command line args - do this to unite mains, default tui -s to query
+*** DONE h : help ; flags.PrintDefaults? only prints the flag info
+*** DONE s : search or +q : query+
+*** DONE o : open after searching
+*** WAIT c : alternate config file
 ** TODO work on TUI
    - go build . && st -e ./goref
      - seems like a good way to test
 ** TODO let SearchString take list of fields to show
+   - actually I think it makes more sense to take fields *not* to show
 ** TODO handle resources like books, incollection, etc
-*** TODO only print the fields that exist/are relevant
+*** TODO only print the fields that exist/are relevant - related to SearchString above
    - reading in works for the article fields
    - need to add their respective fields
    - also string type doesn't really work right now
 ** TODO continue adding test cases from problems in whole refs.bib
 ** TODO testing of add/edit methods
    - maybe the interface will handle the interesting parts
+** TODO add readme
+** TODO start documentation
+** DONE Config file
+   - ouch, going to have to handle different systems' directory structures
+   - maybe want config in $GOPATH to avoid this
+*** DONE parser for this - minimal
+    - path to library
+    - path to refs.bib
+    - pdf viewer
+** DONE improve fzf interface
+   - reversed the search to start at top
+   - wrapping lines apparently not possible
 
 * Goal Features
   - TUI for adding, editing references, probably either
@@ -66,3 +73,39 @@
    - checkboxes in interface to select fields
    - this will be useful even while nothing else works
    - just pipe this file into fzf and have most of the functionality I want
+
+/*
+Reference could be an array instead of a struct
+type Field int
+const (
+Type Field = iota
+Key
+Author
+...
+Tags
+NumFields // nice way to get the number of fields, just leave at end
+)
+func (f Field) String() string {} // for printing
+This would require all of the fields to be stored as strings
+which is fine, just split Authors on ` and ` if needed and Tags on space
+Reference[Type] = Field
+type Field struct {
+    *regexp.Regexp
+    Value
+}
+but then how to associate the regular expressions with the right positions?
+just have to maintain an array of them
+parallel arrays of Reference and regexes and loop through regexes, use same
+index in the Reference array
+    - negates need for this Field struct
+at every refstring, loop through regexes and Reference[i] = regex[i].FindMatch
+refs is still []Reference, so append at end
+Field alias above makes this not work for integer i without a cast, so maybe no alias
+go back to custom Regex type like in go-cart infile reading
+Regex and Field value, then the array of regexes doesnt have to be ordered either
+
+The way I've done it already makes the most sense to me intuitively, but I dislike
+the huge tree of ifs when theyre all doing the same thing
+Similarly the list of named regular expressions; seems clear that there should
+be some way to pair the regexes and the Reference fields
+*/

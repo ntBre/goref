@@ -6,34 +6,34 @@ import (
 
 var (
 	ref = Reference{
-		Type:    "article",
-		Key:     "MP2",
-		Authors: []string{"C. M{\\o}ller", "M. S. Plesset"},
-		Title:   "Note on an Approximation Treatment for Many-Electron Systems",
-		Journal: "Phys. Rev.",
-		Volume:  "46",
-		Pages:   "618-622",
-		Year:    "1934",
-		Tags:    []string{"test", "tag", "now"}}
+		"article",
+		"MP2",
+		"C. M{\\o}ller and M. S. Plesset",
+		"Note on an Approximation Treatment for Many-Electron Systems",
+		"Phys. Rev.",
+		"46",
+		"618-622",
+		"1934",
+		"test tag now"}
 )
 
 func TestAddType(t *testing.T) {
 
 	t.Run("Old struct but no type", func(t *testing.T) {
 		start := Reference{
-			Type:    "",
-			Key:     "MP2",
-			Authors: []string{"C. M{\\o}ller", "M. S. Plesset"},
-			Title:   "Note on an Approximation Treatment for Many-Electron Systems",
-			Journal: "Phys. Rev.",
-			Volume:  "46",
-			Pages:   "618-622",
-			Year:    "1934",
-			Tags:    []string{"test", "tag", "now"}}
+			"",
+			"MP2",
+			"C. M{\\o}ller and M. S. Plesset",
+			"Note on an Approximation Treatment for Many-Electron Systems",
+			"Phys. Rev.",
+			"46",
+			"618-622",
+			"1934",
+			"test tag now"}
 		goaltype := "book"
 		err := start.AddType(goaltype)
-		if err != nil || start.Type != goaltype {
-			t.Errorf("got %s, wanted %s", start.Type, goaltype)
+		if err != nil || start[Type] != goaltype {
+			t.Errorf("got %s, wanted %s", start[Type], goaltype)
 		}
 	})
 
@@ -41,8 +41,8 @@ func TestAddType(t *testing.T) {
 		start := new(Reference)
 		goaltype := "book"
 		err := start.AddType(goaltype)
-		if err != nil || start.Type != goaltype {
-			t.Errorf("got %s, wanted %s", start.Type, goaltype)
+		if err != nil || start[Type] != goaltype {
+			t.Errorf("got %s, wanted %s", start[Type], goaltype)
 		}
 	})
 
@@ -57,38 +57,38 @@ func TestAddType(t *testing.T) {
 
 func TestEditType(t *testing.T) {
 	start := Reference{
-		Type:    "article",
-		Key:     "MP2",
-		Authors: []string{"C. M{\\o}ller", "M. S. Plesset"},
-		Title:   "Note on an Approximation Treatment for Many-Electron Systems",
-		Journal: "Phys. Rev.",
-		Volume:  "46",
-		Pages:   "618-622",
-		Year:    "1934",
-		Tags:    []string{"test", "tag", "now"}}
+		"article",
+		"MP2",
+		"C. M{\\o}ller and M. S. Plesset",
+		"Note on an Approximation Treatment for Many-Electron Systems",
+		"Phys. Rev.",
+		"46",
+		"618-622",
+		"1934",
+		"test tag now"}
 	goaltype := "book"
 	start.EditType(goaltype)
-	if start.Type != goaltype {
-		t.Errorf("got %s, wanted %s", start.Type, goaltype)
+	if start[Type] != goaltype {
+		t.Errorf("got %s, wanted %s", start[Type], goaltype)
 	}
 }
 
 func TestString(t *testing.T) {
-	want := "Type: article\nKey: MP2\nAuthors: C. M{\\o}ller and M. S. Plesset\n"+
-		"Title: Note on an Approximation Treatment for Many-Electron Systems\n"+
-		"Journal: Phys. Rev.\nVolume: 46\nPages: 618-622\nYear: 1934\nTags: test, tag, now\n"
+	want := "Type: article\nKey: MP2\nAuthors: C. M{\\o}ller and M. S. Plesset\n" +
+		"Title: Note on an Approximation Treatment for Many-Electron Systems\n" +
+		"Journal: Phys. Rev.\nVolume: 46\nPages: 618-622\nYear: 1934\nTags: test tag now\n"
 	got := ref.String()
 	if got != want {
 		t.Errorf("\ngot %q\nwad %q", got, want)
 	}
-}	
+}
 
 func TestSearchString(t *testing.T) {
-	want := "MP2: C. M{\\o}ller and M. S. Plesset, "+
-		"Note on an Approximation Treatment for Many-Electron Systems, "+
-		"Phys. Rev. 46, 618-622, 1934; test, tag, now\n"
+	want := "article, MP2, C. M{\\o}ller and M. S. Plesset, " +
+		"Note on an Approximation Treatment for Many-Electron Systems, " +
+		"Phys. Rev., 46, 618-622, 1934, test tag now\n"
 	got := ref.SearchString()
 	if got != want {
 		t.Errorf("\ngot %q\nwad %q", got, want)
 	}
-}	
+}

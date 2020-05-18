@@ -8,70 +8,75 @@ import (
 )
 
 var (
-	refs = []Reference{Reference{
-		Type:    "article",
-		Key:     "MP2",
-		Authors: []string{"C. M{\\o}ller", "M. S. Plesset"},
-		Title:   "Note on an Approximation Treatment for Many-Electron Systems",
-		Journal: "Phys. Rev.",
-		Volume:  "46",
-		Pages:   "618-622",
-		Year:    "1934",
-		Tags:    []string{"test", "tag", "now"}}}
+	refs = []Reference{
+		Reference{"article",
+			"MP2",
+			"C. M{\\o}ller and M. S. Plesset",
+			"Note on an Approximation Treatment for Many-Electron Systems",
+			"Phys. Rev.",
+			"46",
+			"618-622",
+			"1934",
+			"test tag now"},
+	}
 	refs2 = []Reference{
+		Reference{"article",
+			"MP2",
+			"C. M{\\o}ller and M. S. Plesset",
+			"Note on an Approximation Treatment for Many-Electron Systems",
+			"Phys. Rev.",
+			"46",
+			"618-622",
+			"1934",
+			"test tag now"},
 		Reference{
-			Type:    "article",
-			Key:     "MP2",
-			Authors: []string{"C. M{\\o}ller", "M. S. Plesset"},
-			Title:   "Note on an Approximation Treatment for Many-Electron Systems",
-			Journal: "Phys. Rev.",
-			Volume:  "46",
-			Pages:   "618-622",
-			Year:    "1934",
-			Tags:    []string{"test", "tag", "now"},
-		},
-		Reference{
-			Type:    "article",
-			Key:     "Rittby91",
-			Authors: []string{"C. M. L. Rittby"},
-			Title:   "",
-			Journal: "J. Chem. Phys.",
-			Volume:  "95",
-			Pages:   "5609-5611",
-			Year:    "1991",
-			Tags:    []string{""},
+			"article",
+			"Rittby91",
+			"C. M. L. Rittby",
+			"",
+			"J. Chem. Phys.",
+			"95",
+			"5609-5611",
+			"1991",
+			"",
 		},
 	}
 	refpg = []Reference{
 		Reference{
-			Type:    "article",
-			Key:     "Huang08",
-			Authors: []string{"X. Huang", "T. J. Lee"},
-			Title: "A Procedure for Computing Accurate $Ab\\ Initio$ " +
+			"article",
+			"Huang08",
+			"X. Huang and T. J. Lee",
+			"A Procedure for Computing Accurate $Ab\\ Initio$ " +
 				"Quartic Force Fields: Application to {HO$_2$$^+$ and H$_2$O}",
-			Journal: "J. Chem. Phys.",
-			Volume:  "129",
-			Pages:   "044312",
-			Year:    "2008",
-			Tags:    []string{""},
+			"J. Chem. Phys.",
+			"129",
+			"044312",
+			"2008",
+			"",
 		},
 	}
 	book = []Reference{
 		Reference{
-			Type:    "book",
-			Key:     "Cook",
-			Authors: []string{"D. B. Cook"},
-			Title:   "Handbook of Computational Quantum Chemistry",
-			Year:    "2005",
-			Tags:    []string{""},
+			"book",
+			"Cook",
+			"D. B. Cook",
+			"Handbook of Computational Quantum Chemistry",
+			"",
+			"",
+			"",
+			"2005",
+			"",
 		},
 		Reference{
-			Type:    "book",
-			Key:     "Cramer",
-			Authors: []string{"C. J. Cramer"},
-			Title:   "Essentials of Computational Chemistry: Theories and Models",
-			Year:    "2004",
-			Tags:    []string{""},
+			"book",
+			"Cramer",
+			"C. J. Cramer",
+			"Essentials of Computational Chemistry: Theories and Models",
+			"",
+			"",
+			"",
+			"2004",
+			"",
 		},
 	}
 )
@@ -118,7 +123,7 @@ func TestMakeBib(t *testing.T) {
 		"TAGS: test tag now",
 		""}
 	if !reflect.DeepEqual(got, want) {
-		t.Errorf("got %#v, wanted %#v\n", got, want)
+		t.Errorf("\ngot %#v, \nwad %#v\n", got, want)
 	}
 }
 
