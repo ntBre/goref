@@ -4,56 +4,31 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
-	"github.com/rivo/tview"
 	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"regexp"
 	"strings"
+
+	"github.com/gdamore/tcell"
+	"github.com/rivo/tview"
 )
 
+// Command line flags
+var (
+	search = flag.Bool("s", false, "search the bib file with fzf and print the match")
+	open   = flag.Bool("o", false, "like -s but try to open the chosen file in pdfviewer")
+	add    = flag.String("a", "", "add a reference in \"Authors, Title, Journal, Volume, Page, Year\" format")
+)
+
+// Global configuration and reference arrays
 var (
 	Config [noptions]string
-	search bool
-	open   bool
-	help   bool
+	refs   []Reference
 )
 
-const (
-	Type Field = iota
-	Key
-	Authors
-	Title
-	Journal
-	Volume
-	Pages
-	Year
-	Tags
-	NumFields
-)
-
-type Field int
-
-type RefRegex struct {
-	Expr  *regexp.Regexp
-	Value Field
-}
-
-var (
-	RefRegexes = []RefRegex{
-		RefRegex{regexp.MustCompile(`@(article|book|incollection|misc|string){.*`), Type},
-		RefRegex{regexp.MustCompile(`(?U)@.*\{(.*),`), Key},
-		RefRegex{regexp.MustCompile(`(?iU)Author\s*=\s*{(.*)},`), Authors},
-		RefRegex{regexp.MustCompile(`(?iU)Title\s*=\s*{(.*)},`), Title},
-		RefRegex{regexp.MustCompile(`(?iU)Journal\s*=\s*{(.*)},`), Journal},
-		RefRegex{regexp.MustCompile(`(?i)Volume\s*=\s*\{?([a-z0-9]*)\}?,`), Volume},
-		RefRegex{regexp.MustCompile(`(?i)Pages\s*=\s*{?([a-z-0-9]*)}?,`), Pages},
-		RefRegex{regexp.MustCompile(`(?i)Year\s*=\s*\{?([a-z0-9]*)}?}`), Year},
-		RefRegex{regexp.MustCompile(`(?i)TAGS: (.*\S)`), Tags},
-	}
-)
-
+// ReadBib reads a LaTeX bibliography file into a slice of References
 func ReadBib(bibname string) (refs []Reference) {
 
 	file, err := ioutil.ReadFile(bibname)
@@ -78,7 +53,7 @@ func ReadBib(bibname string) (refs []Reference) {
 	}
 	// put references on single lines
 	refstrings := make([]string, 0)
-	for i, _ := range indices {
+	for i := range indices {
 		if i < len(indices)-1 {
 			refstrings = append(refstrings, strings.Join(lines[indices[i]:indices[i+1]], " "))
 		} else {
@@ -103,6 +78,8 @@ func ReadBib(bibname string) (refs []Reference) {
 	return
 }
 
+// MakeBib converts a slice of Reference back into the lines of a
+// LaTeX bibliography file
 func MakeBib(refs []Reference) (lines []string) {
 	for _, ref := range refs {
 		lines = append(lines, fmt.Sprintf("@%s{%s,", ref[Type], ref[Key]),
@@ -117,11 +94,14 @@ func MakeBib(refs []Reference) (lines []string) {
 	return
 }
 
+// WriteBib uses MakeBib to write a LaTeX bibliography file
 func WriteBib(refs []Reference, filename string) {
 	lines := strings.Join(MakeBib(refs), "\n")
 	ioutil.WriteFile(filename, []byte(lines), 0755)
 }
 
+// WriteFZFList writes a slice of Reference into a format useable by
+// fzf
 func WriteFZFList(refs []Reference, w io.Writer) {
 	lines := ""
 	for _, ref := range refs {
@@ -130,12 +110,14 @@ func WriteFZFList(refs []Reference, w io.Writer) {
 	w.Write([]byte(lines))
 }
 
+// FuzzyFind is the fzf interface
 func FuzzyFind(refs []Reference) string {
 	// fuzzy find in refs and return the found string
 	buf := new(bytes.Buffer)
 	WriteFZFList(refs, buf)
 	// search from the top
-	command := "fzf -m --layout=reverse"
+	// (e)xact search, search for words not letters
+	command := "fzf -m --layout=reverse -e"
 	shell := os.Getenv("SHELL")
 	if len(shell) == 0 {
 		shell = "sh"
@@ -153,39 +135,80 @@ func FuzzyFind(refs []Reference) string {
 
 }
 
-func ParseFlag() {
-	flag.BoolVar(&search, "s", false, "instead of running the application"+
-		" just search the bib file with fzf")
-	flag.BoolVar(&open, "o", false, "with -s, try to open the chosen file in pdfviewer")
-	flag.BoolVar(&help, "h", false, "list the command line options")
+// ParseFlags parses command line flags and returns the remaining
+// arguments
+func ParseFlags() {
 	flag.Parse()
 }
 
-func main() {
-	ParseFlag()
-	ParseConfig("/home/brent/.config/goref/config")
-	refs := ReadBib(Config[bibfile])
-	if search {
-		out := FuzzyFind(refs)
-		// need a way to grab Key and add .pdf
-		if open {
-			pdfFile := regexp.MustCompile(`(?i)^[a-z]+, ([a-z0-9]+)`).FindStringSubmatch(out)[1]
-			pdfPath := Config[library] + "/" + pdfFile + ".pdf"
-			if _, err := os.Stat(pdfPath); !os.IsNotExist(err) {
-				exec.Command(Config[pdfcmd], pdfPath).Run()
-			} else {
-				if out != "" {
-					fmt.Println(out)
-				}
-			}
-		}
-	} else if help {
-		flag.PrintDefaults()
-	} else {
-		box := tview.NewBox().SetBorder(true).SetTitle("[blue]goref")
-		if err := tview.NewApplication().SetRoot(box, true).Run(); err != nil {
-			panic(err)
-		}
+// CleanUp writes the updated LaTeX bibliography file and exits with a
+// status corresponding to err
+func CleanUp(err error) {
+	var exitCode int
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "goref: %s\n", err)
+		exitCode = 2
 	}
 	WriteBib(refs, Config[bibfile])
+	os.Exit(exitCode)
+}
+
+func main() {
+	ParseFlags()
+	ParseConfig("/home/brent/.config/goref/config")
+	refs = ReadBib(Config[bibfile])
+	// restructure inside here as function calls
+	// so they can be called by TUI buttons too
+	switch {
+	case *search || *open:
+		print := true
+		out := FuzzyFind(refs)
+		if *open {
+			match := regexp.MustCompile(`(?i)^[a-z]+, ([a-z0-9]+)`).
+				FindStringSubmatch(out)
+			var pdfFile string
+			if len(match) >= 2 {
+				pdfFile = match[1]
+			}
+			pdfPath := Config[library] + "/" + pdfFile + ".pdf"
+			if _, err := os.Stat(pdfPath); !os.IsNotExist(err) {
+				exec.Command(Config[pdfcmd], pdfPath).Start()
+				print = false
+			}
+		}
+		if print && out != "" {
+			fmt.Println(out)
+		}
+	case *add != "":
+		// AddRef(*add)
+		fmt.Println(*add)
+	default:
+		tview.DoubleClickInterval = 0
+		app := tview.NewApplication().EnableMouse(true)
+		text := tview.NewTextView().
+			SetChangedFunc(func() {
+				app.Draw()
+			})
+		text.SetBorder(true).SetTitle("References")
+		for _, ref := range refs {
+			fmt.Fprintf(text, ref.SearchString())
+		}
+		flex := tview.NewFlex().
+			AddItem(tview.NewBox().SetBorder(true).SetTitle("Menu"), 20, 1, false).
+			AddItem(text, 0, 1, true)
+		// have to duplicate this for every box, or put it on the app,
+		// which takes over control of the subelement keybinds
+		text.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+			switch event.Rune() {
+			case 'q':
+				app.Stop()
+				return nil
+			}
+			return nil
+		})
+		if err := app.SetRoot(flex, true).SetFocus(flex).Run(); err != nil {
+			CleanUp(err)
+		}
+	}
+	CleanUp(nil)
 }

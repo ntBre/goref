@@ -3,8 +3,10 @@ package main
 import (
 	"errors"
 	"fmt"
+	"regexp"
 )
 
+// Errors
 var (
 	ErrTypeExists    = errors.New("Field Type already exists for this Reference")
 	ErrKeyExists     = errors.New("Field Key already exists for this Reference")
@@ -16,6 +18,47 @@ var (
 	ErrYearExists    = errors.New("Field Year already exists for this Reference")
 )
 
+// Field enumerates the types of fields a reference can have
+type Field int
+
+// Field enumeration
+const (
+	Type Field = iota
+	Key
+	Authors
+	Title
+	Journal
+	Volume
+	Pages
+	Year
+	Tags
+	NumFields
+)
+
+// RefRegex is a combination of a regexp.Regexp and an associated
+// Reference Field
+type RefRegex struct {
+	Expr  *regexp.Regexp
+	Value Field
+}
+
+// Regular expressions associated with their corresponding Reference
+// Fields
+var (
+	RefRegexes = []RefRegex{
+		RefRegex{regexp.MustCompile(`@(article|book|incollection|misc|string){.*`), Type},
+		RefRegex{regexp.MustCompile(`(?U)@.*\{(.*),`), Key},
+		RefRegex{regexp.MustCompile(`(?iU)Author\s*=\s*{(.*)},`), Authors},
+		RefRegex{regexp.MustCompile(`(?iU)Title\s*=\s*{(.*)},`), Title},
+		RefRegex{regexp.MustCompile(`(?iU)Journal\s*=\s*{(.*)},`), Journal},
+		RefRegex{regexp.MustCompile(`(?i)Volume\s*=\s*\{?([a-z0-9]*)\}?,`), Volume},
+		RefRegex{regexp.MustCompile(`(?i)Pages\s*=\s*{?([a-z-0-9]*)}?,`), Pages},
+		RefRegex{regexp.MustCompile(`(?i)Year\s*=\s*\{?([a-z0-9]*)}?}`), Year},
+		RefRegex{regexp.MustCompile(`(?i)TAGS: (.*\S)`), Tags},
+	}
+)
+
+// Reference is a wrapper type for a string slice of Fields
 type Reference [NumFields]string
 
 // type Reference struct {
@@ -37,9 +80,11 @@ func (r Reference) String() string {
 		r[Pages], r[Year], r[Tags])
 }
 
+// SearchString formats a reference into a one-line string for use in
+// fzf
 func (r Reference) SearchString() string {
 	s := ""
-	for i, _ := range r {
+	for i := range r {
 		if r[i] != "" {
 			s += fmt.Sprintf("%s", r[i])
 			if i < len(r)-1 {
@@ -51,6 +96,11 @@ func (r Reference) SearchString() string {
 	return s
 }
 
+// AddRef adds a reference from the -a command line option
+func AddRef(add string) Reference {
+	return *new(Reference)
+}
+
 // func NewReference(rtype, rkey string, rauth []string, rtitle,
 // 	rjour, rvol, rpages, ryear string) Reference {
 // 	return Reference{Type: rtype, Key: rkey, Authors: rauth,
@@ -58,6 +108,7 @@ func (r Reference) SearchString() string {
 // 		Year: ryear}
 // }
 
+// AddType adds a reference type to r
 func (r *Reference) AddType(refType string) error {
 	if r[Type] != "" {
 		return ErrTypeExists
@@ -66,6 +117,7 @@ func (r *Reference) AddType(refType string) error {
 	return nil
 }
 
+// EditType allows the type of r to be changed
 func (r *Reference) EditType(refType string) {
 	r[Type] = refType
 }

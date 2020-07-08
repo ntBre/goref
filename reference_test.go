@@ -1,6 +1,7 @@
 package main
 
 import (
+	"reflect"
 	"testing"
 )
 
@@ -90,5 +91,14 @@ func TestSearchString(t *testing.T) {
 	got := ref.SearchString()
 	if got != want {
 		t.Errorf("\ngot %q\nwad %q", got, want)
+	}
+}
+
+func TestAddRef(t *testing.T) {
+	input := ""
+	got := AddRef(input)
+	want := Reference{}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("got %v, wanted %v\n", got, want)
 	}
 }

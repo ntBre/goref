@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	refs = []Reference{
+	trefs = []Reference{
 		Reference{"article",
 			"MP2",
 			"C. M{\\o}ller and M. S. Plesset",
@@ -84,8 +84,8 @@ var (
 func TestReadBib(t *testing.T) {
 	t.Run("basic reference", func(t *testing.T) {
 		got := ReadBib("tex/min.bib")
-		if !reflect.DeepEqual(got, refs) {
-			t.Errorf("\ngot %q\nwad %q\n", got, refs)
+		if !reflect.DeepEqual(got, trefs) {
+			t.Errorf("\ngot %q\nwad %q\n", got, trefs)
 		}
 	})
 	t.Run("two references", func(t *testing.T) {
@@ -112,7 +112,7 @@ func TestReadBib(t *testing.T) {
 }
 
 func TestMakeBib(t *testing.T) {
-	got := MakeBib(refs)
+	got := MakeBib(trefs)
 	want := []string{"@article{MP2,",
 		"Author={C. M{\\o}ller and M. S. Plesset},",
 		"Title={Note on an Approximation Treatment for Many-Electron Systems},",
@@ -128,7 +128,7 @@ func TestMakeBib(t *testing.T) {
 }
 
 func TestWriteBib(t *testing.T) {
-	WriteBib(refs, "tex/testbib.out")
+	WriteBib(trefs, "tex/testbib.out")
 }
 
 func TestWriteFZFList(t *testing.T) {

@@ -13,6 +13,7 @@ const (
 	noptions
 )
 
+// Option is an enumeration of configuration options
 type Option int
 
 func (o Option) String() string {
@@ -23,11 +24,13 @@ func (o Option) String() string {
 	}[o]
 }
 
+// ConfigRegex is a composite of a regexp.Regexp and Option
 type ConfigRegex struct {
 	Expr *regexp.Regexp
 	Opt  Option
 }
 
+// Regular expressions for configuration options
 var (
 	Regexes = []ConfigRegex{
 		ConfigRegex{regexp.MustCompile(`(?i)library=`), library},
@@ -36,6 +39,8 @@ var (
 	}
 )
 
+// ParseConfig parses a configuration file and puts the found options
+// into the global Config array
 func ParseConfig(config string) {
 	file, err := ioutil.ReadFile(config)
 	if err != nil {

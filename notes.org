@@ -1,14 +1,21 @@
 * TODOS
+** IDEA cli with prompts like add field? [A]uthor, [D]ate ...
+** TODO work on TUI - might give up on this
+   - go build . && st -e ./goref
+     - seems like a good way to test
+   - abook is new inspiration
+     - main screen is refs list
+     - probably want my own fuzzy finding with /
+     - a brings up add screen with list of fields and keys to press like abook
+       - or tab to scroll through
 ** DONE open match in pdf
    - search library path for matching name and open
 ** WAIT command line args - do this to unite mains, default tui -s to query
-*** DONE h : help ; flags.PrintDefaults? only prints the flag info
+*** DONE +h : help ; flags.PrintDefaults? only prints the flag info+
+    - built in with flags
 *** DONE s : search or +q : query+
 *** DONE o : open after searching
 *** WAIT c : alternate config file
-** TODO work on TUI
-   - go build . && st -e ./goref
-     - seems like a good way to test
 ** TODO let SearchString take list of fields to show
    - actually I think it makes more sense to take fields *not* to show
 ** TODO handle resources like books, incollection, etc
